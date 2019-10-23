@@ -2,7 +2,7 @@ defmodule InterfaceWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", InterfaceWeb.RoomChannel
+  channel "universe", InterfaceWeb.UniverseChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
@@ -16,6 +16,7 @@ defmodule InterfaceWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   def connect(_params, socket, _connect_info) do
+
     {:ok, socket}
   end
 

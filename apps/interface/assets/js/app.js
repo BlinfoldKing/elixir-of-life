@@ -15,7 +15,7 @@ import * as p5 from "./p5.min.js";
 // Import local files
 //
 // Local files can be imported directly using relative paths, for example:
-// import socket from "./socket"
+import channel from "./socket"
 //
 //
 
@@ -54,27 +54,7 @@ let s = sk => {
     };
 
     sk.draw = () => {
-        if (simulationRun) {
-            liveCount = 0;
-            let newGrid = [];
-            for (let i = 0; i < Grid.length; i++) {
-                newGrid[i] = [];
-                for (let j = 0; j < Grid[i].length; j++) {
-                    let n = sk.countNeighbour(i, j);
-                    if (n == 3 && !Grid[i][j]) {
-                        newGrid[i][j] = true;
-                    } else if (n < 2 || n > 3) {
-                        newGrid[i][j] = false;
-                    } else {
-                        newGrid[i][j] = Grid[i][j];
-                    }
-                    if (newGrid[i][j]) liveCount++;
-                }
-            }
-            Grid = newGrid;
-        }
-
-        if (liveCount < 0) simulationRun = false;
+        channel.on("board:update", resp => Grid = resp.board)
 
         sk.stroke(100);
         for (let i = 0; i < Xsize; i += 10) {
@@ -95,54 +75,18 @@ let s = sk => {
         let pos = sk.screenToGrid(sk.mouseX, sk.mouseY);
         if (pos[0] < sk.floor(Xsize / 10) - 1 && sk.floor(Ysize / 10) - 1) {
             Grid[pos[0]][pos[1]] = !Grid[pos[0]][pos[1]];
-            if (Grid[pos[0]][pos[1]]) {
-                liveCount++;
-            } else {
-                liveCount--;
-            }
+            channel.push("board:update", {
+                onpause: simulationRun,
+                board: Grid
+            }, 1000)
+                .receive("ok", resp => console.log("masook"))
+                .receive("error", resp => { console.log("push failed", resp) })
         }
+
     };
 
     sk.screenToGrid = (screenX, screenY) => {
         return [sk.floor(screenX / 10), sk.floor(screenY / 10)];
-    };
-
-    sk.countNeighbour = (x, y) => {
-        let sum = 0;
-
-        if (x > 0) {
-            if (Grid[x - 1][y]) sum += 1;
-
-            if (y + 1 < sk.floor(Ysize / 10)) {
-                if (Grid[x - 1][y + 1]) sum += 1;
-            }
-
-            if (y > 0) {
-                if (Grid[x - 1][y - 1]) sum += 1;
-            }
-        }
-
-        if (y > 0) {
-            if (Grid[x][y - 1]) sum += 1;
-
-            if (x + 1 < sk.floor(Ysize / 10)) {
-                if (Grid[x + 1][y - 1]) sum += 1;
-            }
-        }
-
-        if (x + 1 < sk.floor(Xsize / 10) - 1) {
-            if (Grid[x + 1][y]) sum += 1;
-
-            if (y + 1 < sk.floor(Ysize / 10) - 1) {
-                if (Grid[x + 1][y + 1]) sum += 1;
-            }
-        }
-
-        if (y + 1 < sk.floor(Ysize / 10)) {
-            if (Grid[x][y + 1]) sum += 1;
-        }
-
-        return sum;
     };
 };
 
